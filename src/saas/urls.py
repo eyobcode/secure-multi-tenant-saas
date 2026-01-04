@@ -19,6 +19,6 @@ from django.urls import path
 from .views import saas_home
 
 urlpatterns = [
-    path('home/', saas_home),
+    path('', saas_home),
     path('admin/', admin.site.urls),
 ]
