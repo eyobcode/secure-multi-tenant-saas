@@ -54,6 +54,10 @@ ENV DJANGO_DEBUG=${DJANGO_DEBUG}
 ARG DJANGO_SECRET_KEY
 ENV DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY} 
 
+
+# ensure static folder exists
+RUN mkdir -p /code/src/staticfiles/vendor
+
 # database isn't available during build
 # run any other commands that do not need the database
 # such as:
