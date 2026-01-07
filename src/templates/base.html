@@ -6,10 +6,14 @@
     {% include "base/css.html" %}
     <title>{% block title %}Home{% endblock %}</title>
   </head>
-  <body>
-    {% include "navbar/nav.html" %}
-    {% block content %} 
-    {% endblock %} 
-    {% include "base/js.html" %}
+  <body class="bg-gray-50 ">
+  {% include "navbar/nav.html" %}
+
+  <main class="pt-24">
+      {% block content %}{% endblock %}
+  </main>
+
+  {% include "base/js.html" %}
   </body>
+
 </html>

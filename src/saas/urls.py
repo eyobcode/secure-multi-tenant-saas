@@ -17,8 +17,11 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from .views import saas_home
+from auth.views import login_view, register_view
 
 urlpatterns = [
     path('', saas_home),
+    path('login/', login_view),
+    path('register/', register_view),
     path('admin/', admin.site.urls),
 ]
