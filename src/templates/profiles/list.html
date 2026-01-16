@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block head_title %}
+    Users - {{ block.super }}
+{% endblock %}
+
+{% block content %}
+    <h1 class="text-capitalize font-medium">Users</h1>
+
+    {% if perms.auth %}
+        {% if perms.auth.view_user %}
+            <ul>
+                {% for user in object_list %}
+                    <li class="p-4">
+                        <a href="http://localhost/profiles/{{user.username}}:8080">
+                            {{ user.username }}
+                        </a>
+                    </li>
+                {% empty %}
+                    <li>No users found.</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>You are not allowed to view users.</p>
+        {% endif %}
+    {% endif %}
+
+{% endblock %}
