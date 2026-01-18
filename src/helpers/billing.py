@@ -1,6 +1,3 @@
-from ctypes import cast
-from email.policy import default
-
 import stripe
 from decouple import config
 
@@ -13,7 +10,12 @@ if "sk_test" in STRIPE_SECRET_KEY and not DJANGO_DEBUG:
 
 stripe.api_key = STRIPE_SECRET_KEY
 
-# customer = stripe.Customer.create(
-#     name="Jenny Rosen",
-#     email="jennyrosen@example.com",
-# )
+def create_customer(raw=False, name="", email="",metadata={}):
+    customer = stripe.Customer.create(
+        name=name,
+        email=email,
+        metadata=metadata,
+    )
+    if raw:
+        return customer
+    return customer.id
