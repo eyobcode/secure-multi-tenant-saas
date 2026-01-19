@@ -67,7 +67,7 @@ class SubscriptionsPrice(models.Model):
     @property
     def stripe_price(self):
         # remove decimal place
-        return self.price * 100
+        return int(self.price * 100)
 
     @property
     def product_stripe_id(self):
@@ -77,12 +77,17 @@ class SubscriptionsPrice(models.Model):
 
     def save(self,*args, **kwargs):
         if not self.stripe_id and self.product_stripe_id is not None:
-            stripe_id = helpers.billing.create_price(currency=self.stripe_currency,
-                                        unit_amount=self.stripe_price,
-                                        interval=self.interval,
-                                        metadata={"subscription_plan_price_id": self.id},
-                                        product=self.stripe_id,
-                                        raw=False)
+            stripe_id = helpers.billing.create_price(
+                currency=self.stripe_currency,
+                unit_amount=self.stripe_price,
+                interval=self.interval,
+                metadata={"subscription_plan_price_id": self.id},
+                product=self.product_stripe_id,
+                raw=False
+            )
+            self.stripe_id = stripe_id
+
+
         super().save(*args, **kwargs)
 
 
