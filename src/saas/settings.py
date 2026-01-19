@@ -220,7 +220,6 @@ STORAGES = {
     },
 }
 
-ALLAUTH_UI_THEME ="dark"
 
 """
 Django settings for saas project.
@@ -444,5 +443,5 @@ STORAGES = {
     },
 }
 
-ALLAUTH_UI_THEME ="dark"
+# ALLAUTH_UI_THEME ="dark"
 
