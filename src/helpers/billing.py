@@ -37,11 +37,9 @@ def create_price(currency="usd",unit_amount="9999",
                  metadata={},product=None):
     if product is None:
         return None
-    price = stripe.Price.create(currency=currency,
-                                  unit_amount=unit_amount,
-                                  recurring={'interval':interval},
-                                  metadata=metadata,
-                                  product=product)
+    price = stripe.Price.create(currency=currency,unit_amount=unit_amount,recurring={'interval':interval},
+                                metadata=metadata,
+                                product=product)
     if raw:
         return price
     return price.id
