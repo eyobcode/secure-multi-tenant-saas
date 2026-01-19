@@ -31,8 +31,14 @@ class Subscriptions(models.Model):
             "codename__in": [x[0] for x in SUBSCRIPTIONS_PERMISSIONS]
         })
     stripe_id = models.CharField(max_length=150,null=True,blank=True)
+    order = models.IntegerField(default=-1)
+    featured = models.BooleanField(default=True)
+    updated = models.DateTimeField(auto_now=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
 
     class Meta:
+        ordering = ["order","featured", "-updated"]
         permissions = SUBSCRIPTIONS_PERMISSIONS
 
     def save(self,*args, **kwargs):
@@ -43,6 +49,7 @@ class Subscriptions(models.Model):
                 metadata={"subscription_plan_id": self.id},
             )
         super().save(*args, **kwargs)
+
 
     def __str__(self):
         return self.name
@@ -59,6 +66,13 @@ class SubscriptionsPrice(models.Model):
     stripe_id = models.CharField(max_length=150,null=True,blank=True)
     interval = models.CharField(max_length=10, choices=IntervalChoices, default=IntervalChoices.MONTHLY)
     price = models.DecimalField(max_digits=10, decimal_places=2, default=99.99)
+    order = models.IntegerField(default=-1)
+    featured = models.BooleanField(default=True)
+    updated = models.DateTimeField(auto_now=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["subscription__order","order","featured", "-updated"]
 
 
     @property
@@ -87,8 +101,13 @@ class SubscriptionsPrice(models.Model):
             )
             self.stripe_id = stripe_id
 
-
         super().save(*args, **kwargs)
+        if self.featured and self.subscription:
+            qs = SubscriptionsPrice.objects.filter(
+                subscription=self.subscription,
+                interval=self.interval
+            ).exclude(id=self.id)
+            qs.update(featured=False)
 
 
 
