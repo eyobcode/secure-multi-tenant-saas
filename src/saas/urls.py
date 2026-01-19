@@ -17,10 +17,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path,include
 from .views import saas_home
+from subscriptions import views as subscriptions_views
 from auth.views import login_view, register_view
 
 urlpatterns = [
     path('', saas_home, name='home'),
+    path('pricing/', subscriptions_views.subscription_price_view),
     path('login/', login_view),
     path('register/', register_view),
     path('accounts/', include('allauth.urls')),
