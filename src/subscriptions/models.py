@@ -22,6 +22,7 @@ class Subscriptions(models.Model):
     Subscriptions Plan = Stripe Product
     """
     name = models.CharField(max_length=120)
+    subtitle = models.CharField(null=True,blank=True)
     active = models.BooleanField(default=True)
     groups = models.ManyToManyField(Group)
     permissions = models.ManyToManyField(
@@ -35,11 +36,17 @@ class Subscriptions(models.Model):
     featured = models.BooleanField(default=True)
     updated = models.DateTimeField(auto_now=True)
     timestamp = models.DateTimeField(auto_now_add=True)
+    features = models.TextField(null=True, blank=True,help_text="Features for pricing, separated by new line.")
 
 
     class Meta:
         ordering = ["order","featured", "-updated"]
         permissions = SUBSCRIPTIONS_PERMISSIONS
+
+    def get_features_as_list(self):
+        if not self.features:
+            return []
+        return [x.strip() for x in self.features.split("\n")]
 
     def save(self,*args, **kwargs):
         if not self.stripe_id:
@@ -73,7 +80,11 @@ class SubscriptionsPrice(models.Model):
 
     class Meta:
         ordering = ["subscription__order","order","featured", "-updated"]
-
+    @property
+    def display_features_list(self):
+        if not self.subscription:
+            return []
+        return self.subscription.get_features_as_list()
 
     @property
     def stripe_currency(self):
@@ -108,6 +119,18 @@ class SubscriptionsPrice(models.Model):
                 interval=self.interval
             ).exclude(id=self.id)
             qs.update(featured=False)
+
+    @property
+    def display_sub_name(self):
+        if not self.subscription:
+            return "Plan"
+        return self.subscription.name
+
+    @property
+    def display_sub_subtitle(self):
+        if not self.subscription:
+            return "Plan"
+        return self.subscription.subtitle
 
 
 
