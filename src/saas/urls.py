@@ -22,7 +22,8 @@ from auth.views import login_view, register_view
 
 urlpatterns = [
     path('', saas_home, name='home'),
-    path('pricing/', subscriptions_views.subscription_price_view),
+    path('pricing/', subscriptions_views.subscription_price_view,name='pricing'),
+    path('pricing/<str:interval>/', subscriptions_views.subscription_price_view,name='pricing_interval'),
     path('login/', login_view),
     path('register/', register_view),
     path('accounts/', include('allauth.urls')),
