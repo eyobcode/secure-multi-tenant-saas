@@ -5,6 +5,7 @@ import helpers.billing
 
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.urls import reverse
 
 User = settings.AUTH_USER_MODEL
 ALLOW_CUSTOM_USER = True
@@ -99,6 +100,10 @@ class SubscriptionsPrice(models.Model):
         if not self.subscription:
             return None
         return self.subscription.stripe_id
+
+    @property
+    def get_checkout_url(self):
+        return reverse("sub-price-checkout",kwargs={"price_id": self.id})
 
     def save(self,*args, **kwargs):
         if not self.stripe_id and self.product_stripe_id is not None:
