@@ -1,19 +1,39 @@
 {% extends "base.html" %}
 
 {% block head_title %}
-    Success - {{ block.super }}
+    Checkout Success - {{ block.super }}
 {% endblock %}
 
 {% block content %}
-    <div class="fa-th-large text-green-600 text-xl">
-        Successful
-    </div>
+    <div class="container mx-auto p-6">
+        <h1 class="text-2xl font-bold mb-4 text-green-600">🎉 Subscription Successful!</h1>
 
-    <div class="md:b-12">
-        <pre>{{ subscription }}</pre>
-    </div>
+        {% if subscription %}
+            <div class="bg-green-50 border-l-4 border-green-400 p-4 mb-4">
+                <h2 class="text-xl font-semibold">Your Plan:</h2>
+                <p><strong>Name:</strong> {{ subscription.subscription.subscriptionprice.name }}</p>
+                <p><strong>Stripe ID:</strong> {{ subscription.stripe_id }}</p>
+                <p><strong>Status:</strong> {% if subscription.user_cancelled %}Cancelled{% else %}Active{% endif %}</p>
+                <p><strong>Created At:</strong> {{ subscription.created_at }}</p>
+            </div>
+        {% else %}
+            <p>No subscription info available.</p>
+        {% endif %}
 
-    <div class="md:b-12">
-        <pre>{{ checkout }}</pre>
+        {% if checkout_data %}
+            <div class="bg-blue-50 border-l-4 border-blue-400 p-4">
+                <h2 class="text-xl font-semibold">Checkout Info:</h2>
+                <p><strong>Customer Stripe ID:</strong> {{ checkout_data.customer_id }}</p>
+                <p><strong>Plan Stripe ID:</strong> {{ checkout_data.plan_id }}</p>
+                <p><strong>Subscription Stripe ID:</strong> {{ checkout_data.sub_stripe_id }}</p>
+            </div>
+        {% endif %}
+
+        <div class="mt-6">
+            <a href="{% url 'home' %}" class="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                Back to Home
+            </a>
+        </div>
     </div>
 {% endblock %}
+
