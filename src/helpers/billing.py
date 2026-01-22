@@ -90,8 +90,8 @@ def cancel_subscription(stripe_id,reason="", feedback="other",raw=False):
         } )
     return res if raw else res.id
 
-def get_checkout_customer(session_id):
-    checkout_res = get_checkout_session(session_id,raw=True)
+def get_checkout_customer_plan(session_id):
+    checkout_res = get_checkout_session(session_id, raw=True)
     customer_id = checkout_res.customer
     sub_stripe_id = checkout_res.subscription
     sub_r = get_subscription(sub_stripe_id,raw=True)
