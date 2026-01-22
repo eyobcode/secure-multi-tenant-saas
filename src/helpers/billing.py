@@ -20,10 +20,7 @@ def create_customer(raw=False, name="", email="",metadata={}):
         return customer
     return customer.id
 
-def create_product(
-        raw=False,
-        name="",
-        metadata={}):
+def create_product(raw=False,name="",metadata={}):
     product = stripe.Product.create(
         name=name,
         metadata=metadata,
@@ -32,9 +29,7 @@ def create_product(
         return product
     return product.id
 
-def create_price(currency="usd",unit_amount="9999",
-                 interval = 'month',raw=False,
-                 metadata={},product=None):
+def create_price(currency="usd",unit_amount="9999",interval = 'month',raw=False,metadata={},product=None):
     if product is None:
         return None
     price = stripe.Price.create(currency=currency,unit_amount=unit_amount,recurring={'interval':interval},
@@ -43,3 +38,38 @@ def create_price(currency="usd",unit_amount="9999",
     if raw:
         return price
     return price.id
+
+def start_checkout_session(
+        customer_id,
+        success_url,
+        cancel_url,
+        # return_url,
+        price_stripe_id,
+        mode="subscription",
+        raw=False,
+):
+    """
+    Creates a Stripe Checkout Session and returns
+    either the full session object or redirect URL.
+    """
+
+    if not success_url.endswith("?session_id={CHECKOUT_SESSION_ID}"):
+        success_url = f"{success_url}?session_id={{CHECKOUT_SESSION_ID}}"
+
+    session = stripe.checkout.Session.create(
+        customer=customer_id,
+        success_url=success_url,
+        cancel_url=cancel_url,
+        # return_url=return_url,
+        line_items=[
+            {
+                "price": price_stripe_id,
+                "quantity": 1,
+            }
+        ],
+        mode=mode,
+    )
+    if raw:
+        return session
+
+    return session.url
