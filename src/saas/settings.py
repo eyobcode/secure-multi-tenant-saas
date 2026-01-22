@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/5.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
-
+from email.policy import default
 from pathlib import Path
 
 from decouple import config
@@ -58,7 +58,7 @@ ALLOWED_HOSTS = [
 ]
 if DEBUG:
     ALLOWED_HOSTS += ['localhost','127.0.0.1' ]
-
+BASE_URL=config("BASE_URL", default=None)
 
 # Application definition
 
