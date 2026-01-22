@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 import helpers.billing
-from subscriptions.models import SubscriptionsPrice
+from subscriptions.models import SubscriptionsPrice,Subscriptions
 from django.conf import settings
 
 
@@ -54,31 +54,59 @@ def checkout_redirect_view(request):
 
 @login_required
 def checkout_finalize_view(request):
-    session_id = request.GET.get("session_id")
+    session_id = request.GET.get('session_id')
     if not session_id:
         return HttpResponseBadRequest("No checkout session found")
 
-    checkout_res = helpers.billing.get_checkout_session(
-        session_id,
-        raw=True
-    )
-    # print(checkout_res.subscription)
+    checkout_data = helpers.billing.get_checkout_customer_plan(session_id)
+    plan_id = checkout_data.pop('plan_id')
+    customer_id = checkout_data.pop('customer_id')
+    sub_stripe_id = checkout_data.pop("sub_stripe_id")
+    subscription_data = {**checkout_data}
 
-    sub_stripe_id = checkout_res.subscription
-    sub_r = helpers.billing.get_subscription(
-        sub_stripe_id,
-        raw=True
-    )
+    try:
+        sub_obj = Subscription.objects.get(subscriptionprice__stripe_id=plan_id)
+    except Subscription.DoesNotExist:
+        return HttpResponseBadRequest("Invalid plan selected")
 
-    sub_plan = sub_r.plan
-    sub_plan_price_stripe_id = sub_plan.id
+    try:
+        customer_obj = Customer.objects.get(stripe_id=customer_id)
+        user_obj = customer_obj.user
+    except Customer.DoesNotExist:
+        return HttpResponseBadRequest("User not found")
 
-    price_qs = SubscriptionsPrice.objects.filter(stripe_id=sub_plan_price_stripe_id)
-    print(price_qs)
-
-    context = {
-        "subscription": sub_r,
-        "checkout": checkout_res,
+    updated_sub_options = {
+        "subscription": sub_obj,
+        "stripe_id": sub_stripe_id,
+        "user_cancelled": False,
+        **subscription_data,
     }
 
+    _user_sub_exists = False
+    try:
+        _user_sub_obj = UserSubscription.objects.get(user=user_obj)
+        _user_sub_exists = True
+    except UserSubscription.DoesNotExist:
+        _user_sub_obj = UserSubscription.objects.create(
+            user=user_obj,
+            **updated_sub_options
+        )
+
+    if _user_sub_exists:
+        old_stripe_id = _user_sub_obj.stripe_id
+        if old_stripe_id and old_stripe_id != sub_stripe_id:
+            try:
+                helpers.billing.cancel_subscription(old_stripe_id, reason="Auto ended, new membership")
+            except Exception:
+                pass
+
+        for k, v in updated_sub_options.items():
+            setattr(_user_sub_obj, k, v)
+        _user_sub_obj.save()
+
+        messages.success(request, "Success! Thank you for joining.")
+        return redirect(_user_sub_obj.get_absolute_url())
+
+    context = {"subscription": _user_sub_obj, "checkout_data": checkout_data}
     return render(request, "checkout/success.html", context)
+
