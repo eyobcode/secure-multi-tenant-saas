@@ -2,7 +2,8 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 import helpers.billing
-from subscriptions.models import SubscriptionsPrice,Subscriptions
+from subscriptions.models import SubscriptionsPrice,Subscriptions,UserSubscriptions
+from customers.models import Customer
 from django.conf import settings
 
 
@@ -65,8 +66,8 @@ def checkout_finalize_view(request):
     subscription_data = {**checkout_data}
 
     try:
-        sub_obj = Subscription.objects.get(subscriptionprice__stripe_id=plan_id)
-    except Subscription.DoesNotExist:
+        sub_obj = Subscriptions.objects.get(subscriptionsprice__stripe_id=plan_id)
+    except Subscriptions.DoesNotExist:
         return HttpResponseBadRequest("Invalid plan selected")
 
     try:
@@ -84,10 +85,10 @@ def checkout_finalize_view(request):
 
     _user_sub_exists = False
     try:
-        _user_sub_obj = UserSubscription.objects.get(user=user_obj)
+        _user_sub_obj = UserSubscriptions.objects.get(user=user_obj)
         _user_sub_exists = True
-    except UserSubscription.DoesNotExist:
-        _user_sub_obj = UserSubscription.objects.create(
+    except UserSubscriptions.DoesNotExist:
+        _user_sub_obj = UserSubscriptions.objects.create(
             user=user_obj,
             **updated_sub_options
         )
@@ -104,8 +105,8 @@ def checkout_finalize_view(request):
             setattr(_user_sub_obj, k, v)
         _user_sub_obj.save()
 
-        messages.success(request, "Success! Thank you for joining.")
-        return redirect(_user_sub_obj.get_absolute_url())
+        # messages.success(request, "Success! Thank you for joining.")
+        # return redirect(_user_sub_obj.get_absolute_url())
 
     context = {"subscription": _user_sub_obj, "checkout_data": checkout_data}
     return render(request, "checkout/success.html", context)
