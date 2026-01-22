@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block head_title %}
+    Success - {{ block.super }}
+{% endblock %}
+
+{% block content %}
+    <div class="fa-th-large text-green-600 text-xl">
+        Successful
+    </div>
+
+    <div class="md:b-12">
+        <pre>{{ subscription }}</pre>
+    </div>
+
+    <div class="md:b-12">
+        <pre>{{ checkout }}</pre>
+    </div>
+{% endblock %}
