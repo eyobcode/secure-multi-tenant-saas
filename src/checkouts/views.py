@@ -54,14 +54,31 @@ def checkout_redirect_view(request):
 
 @login_required
 def checkout_finalize_view(request):
-    checkout_subscription_price_id = request.session.get(
-        "checkout_subscription_price_id"
+    session_id = request.GET.get("session_id")
+    if not session_id:
+        return HttpResponseBadRequest("No checkout session found")
+
+    checkout_res = helpers.billing.get_checkout_session(
+        session_id,
+        raw=True
+    )
+    # print(checkout_res.subscription)
+
+    sub_stripe_id = checkout_res.subscription
+    sub_r = helpers.billing.get_subscription(
+        sub_stripe_id,
+        raw=True
     )
 
-    if checkout_subscription_price_id is None:
-        return redirect("/pricing")
+    sub_plan = sub_r.plan
+    sub_plan_price_stripe_id = sub_plan.id
 
-    customer_stripe_id = request.user.customer.stripe_id
+    price_qs = SubscriptionsPrice.objects.filter(stripe_id=sub_plan_price_stripe_id)
+    print(price_qs)
 
-    # continue Stripesu logic here
-    return redirect("/success")
+    context = {
+        "subscription": sub_r,
+        "checkout": checkout_res,
+    }
+
+    return render(request, "checkout/success.html", context)
