@@ -8,7 +8,7 @@ from django.dispatch import receiver
 from django.urls import reverse
 
 User = settings.AUTH_USER_MODEL
-ALLOW_CUSTOM_USER = True
+ALLOW_CUSTOM_GROUPS = True
 
 
 SUBSCRIPTIONS_PERMISSIONS = [
@@ -137,7 +137,15 @@ class SubscriptionsPrice(models.Model):
             return "Plan"
         return self.subscription.subtitle
 
-
+class SubscriptionStatus(models.TextChoices):
+    ACTIVE = 'active', 'Active'
+    TRIALING = 'trialing', 'Trialing'
+    INCOMPLETE = 'incomplete', 'Incomplete'
+    INCOMPLETE_EXPIRED = 'incomplete_expired', 'Incomplete Expired'
+    PAST_DUE = 'past_due', 'Past Due'
+    CANCELED = 'canceled', 'Canceled'
+    UNPAID = 'unpaid', 'Unpaid'
+    PAUSED = 'paused', 'Paused'
 
 class UserSubscriptions(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -145,10 +153,34 @@ class UserSubscriptions(models.Model):
     stripe_id = models.CharField(max_length=150,null=True,blank=True)
     active = models.BooleanField(default=True)
     user_cancelled = models.BooleanField(default=False)
+    original_period_start = models.DateTimeField(auto_now=False, auto_now_add=False, blank=True, null=True)
+    cancel_at_period_end = models.BooleanField(default=False)
+    current_period_start = models.DateTimeField(auto_now=False, auto_now_add=False, blank=True, null=True)
+    current_period_end = models.DateTimeField(auto_now=False, auto_now_add=False, blank=True, null=True)
+    status = models.CharField(max_length=20, choices=SubscriptionStatus.choices, null=True, blank=True)
+
 
     def __str__(self):
-        return f"{self.user} - {self.subscription}" if self.subscription else str(self.user)
+            return f"{self.user} - {self.subscription}" if self.subscription else str(self.user)
 
+    def save(self, *args, **kwargs):
+        if self.original_period_start is None and self.current_period_start is not None:
+            self.original_period_start = self.current_period_start
+        super().save(*args, **kwargs)
+
+    @property
+    def billing_cycle_anchor(self):
+        """
+        https://docs.stripe.com/payments/checkout/billing-cycle
+        Optional delay to start new subscription in
+        Stripe checkout
+        """
+        if not self.current_period_end:
+            return None
+        return int(self.current_period_end.timestamp())
+
+    def get_absolute_url(self):
+        return reverse("user_subscription")
 
 
 @receiver(post_save, sender=UserSubscriptions)
@@ -166,7 +198,7 @@ def user_sub_post_save(sender, instance, **kwargs):
     if not ALLOW_CUSTOM_GROUPS:
         user.groups.set(groups_ids)
     else:
-        subs_qs = Subscription.objects.filter(active=True)
+        subs_qs = Subscriptions.objects.filter(active=True)
         if subscription_obj is not None:
             subs_qs = subs_qs.exclude(id=subscription_obj.id)
         subs_groups = subs_qs.values_list("groups__id", flat=True)
