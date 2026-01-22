@@ -142,7 +142,9 @@ class SubscriptionsPrice(models.Model):
 class UserSubscriptions(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     subscription = models.ForeignKey(Subscriptions, on_delete=models.SET_NULL, blank=True, null=True)
+    stripe_id = models.CharField(max_length=150,null=True,blank=True)
     active = models.BooleanField(default=True)
+    user_cancelled = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.user} - {self.subscription}" if self.subscription else str(self.user)
