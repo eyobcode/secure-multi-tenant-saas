@@ -1,5 +1,6 @@
 import stripe
 from decouple import config
+from . import date_utils
 
 DJANGO_DEBUG=config("DJANGO_DEBUG", default=False, cast=bool)
 STRIPE_SECRET_KEY=config("STRIPE_SECRET_KEY", default="", cast=str)
@@ -9,6 +10,30 @@ if "sk_test" in STRIPE_SECRET_KEY and not DJANGO_DEBUG:
 
 
 stripe.api_key = STRIPE_SECRET_KEY
+
+
+def serialize_subscription_data(subscription_response):
+    status = subscription_response.status
+    cancel_at_period_end = subscription_response.cancel_at_period_end
+
+    item = subscription_response["items"]["data"][0]
+
+    current_period_start = date_utils.timestamp_as_datetime(
+        item.get("current_period_start")
+    )
+    current_period_end = date_utils.timestamp_as_datetime(
+        item.get("current_period_end")
+    )
+
+    return {
+        "current_period_start": current_period_start,
+        "current_period_end": current_period_end,
+        "status": status,
+        "cancel_at_period_end": cancel_at_period_end,
+    }
+
+
+
 
 def create_customer(raw=False, name="", email="",metadata={}):
     customer = stripe.Customer.create(
@@ -91,9 +116,22 @@ def cancel_subscription(stripe_id,reason="", feedback="other",raw=False):
     return res if raw else res.id
 
 def get_checkout_customer_plan(session_id):
-    checkout_res = get_checkout_session(session_id, raw=True)
-    customer_id = checkout_res.customer
-    sub_stripe_id = checkout_res.subscription
-    sub_r = get_subscription(sub_stripe_id,raw=True)
-    sub_plan = sub_r.plan
-    return customer_id, sub_plan.id
+    checkout_r = get_checkout_session(session_id, raw=True)
+
+    customer_id = checkout_r.customer
+    sub_stripe_id = checkout_r.subscription
+
+    sub_r = get_subscription(sub_stripe_id, raw=True)
+
+    sub_plan = sub_r["items"]["data"][0]["plan"]
+
+    subscription_data = serialize_subscription_data(sub_r)
+
+    data = {
+        "customer_id": customer_id,
+        "plan_id": sub_plan.id,
+        "sub_stripe_id": sub_stripe_id,
+        **subscription_data,
+    }
+    return data
+
