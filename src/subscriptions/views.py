@@ -1,6 +1,28 @@
-from django.shortcuts import render
-from subscriptions.models import SubscriptionsPrice,Subscriptions
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+
+import helpers.billing
+from subscriptions.models import SubscriptionsPrice,Subscriptions,UserSubscriptions
 from django.urls import reverse
+
+@login_required
+def user_subscription_view(request):
+    user_sub_obj, created = UserSubscriptions.objects.get_or_create(user=request.user)
+
+    if request.method == "POST":
+        if user_sub_obj.stripe_id:
+            sub_data = helpers.billing.get_subscription(user_sub_obj.stripe_id,raw=True)
+            for k,v in sub_data.items():
+                setattr(user_sub_obj, k, v)
+            user_sub_obj.save()
+        return redirect(user_sub_obj.get_absolute_url())
+    return render(
+        request,
+        "subscriptions/user_detail_view.html",
+        {
+            "subscription": user_sub_obj
+        }
+    )
 
 
 def subscription_price_view(request, interval="monthly"):
