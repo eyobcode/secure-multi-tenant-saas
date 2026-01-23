@@ -160,6 +160,12 @@ class UserSubscriptions(models.Model):
     status = models.CharField(max_length=20, choices=SubscriptionStatus.choices, null=True, blank=True)
 
     @property
+    def is_active_status(self):
+        return self.status in [
+            SubscriptionStatus.ACTIVE,
+            SubscriptionStatus.TRIALING
+        ]
+    @property
     def plan_name(self):
         if not self.subscription:
             return None
@@ -182,19 +188,22 @@ class UserSubscriptions(models.Model):
             self.original_period_start = self.current_period_start
         super().save(*args, **kwargs)
 
-    @property
-    def billing_cycle_anchor(self):
-        """
-        https://docs.stripe.com/payments/checkout/billing-cycle
-        Optional delay to start new subscription in
-        Stripe checkout
-        """
-        if not self.current_period_end:
-            return None
-        return int(self.current_period_end.timestamp())
+    # @property
+    # def billing_cycle_anchor(self):
+    #     """
+    #     https://docs.stripe.com/payments/checkout/billing-cycle
+    #     Optional delay to start new subscription in
+    #     Stripe checkout
+    #     """
+    #     if not self.current_period_end:
+    #         return None
+    #     return int(self.current_period_end.timestamp())
 
     def get_absolute_url(self):
         return reverse("user_subscription")
+
+    def get_cancel_url(self):
+        return reverse("user_subscription_cancel")
 
 
 
