@@ -40,6 +40,7 @@ urlpatterns = [
     path('login/', login_view),
     path('register/', register_view),
     path('accounts/billing/', subscriptions_views.user_subscription_view,name="user_subscription"),
+    path('accounts/billing/cancel/', subscriptions_views.user_subscription_cancel_view,name="user_subscription_cancel"),
     path('accounts/', include('allauth.urls')),
     path('admin/', admin.site.urls),
     path('profiles/', include('profiles.urls')),
