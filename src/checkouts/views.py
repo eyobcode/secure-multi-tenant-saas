@@ -106,7 +106,7 @@ def checkout_finalize_view(request):
         _user_sub_obj.save()
 
         # messages.success(request, "Success! Thank you for joining.")
-        # return redirect(_user_sub_obj.get_absolute_url())
+        return redirect(_user_sub_obj.get_absolute_url())
 
     context = {"subscription": _user_sub_obj, "checkout_data": checkout_data}
     return render(request, "checkout/success.html", context)
