@@ -159,6 +159,20 @@ class UserSubscriptions(models.Model):
     current_period_end = models.DateTimeField(auto_now=False, auto_now_add=False, blank=True, null=True)
     status = models.CharField(max_length=20, choices=SubscriptionStatus.choices, null=True, blank=True)
 
+    @property
+    def plan_name(self):
+        if not self.subscription:
+            return None
+        return self.subscription.name
+
+    def serializer(self):
+        return {
+            "plan_name":self.plan_name,
+            "current_period_start":self.current_period_start,
+            "current_period_end":self.current_period_end,
+            "status": self.status
+        }
+
 
     def __str__(self):
             return f"{self.user} - {self.subscription}" if self.subscription else str(self.user)
@@ -181,6 +195,8 @@ class UserSubscriptions(models.Model):
 
     def get_absolute_url(self):
         return reverse("user_subscription")
+
+
 
 
 @receiver(post_save, sender=UserSubscriptions)
