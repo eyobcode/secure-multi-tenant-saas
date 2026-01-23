@@ -106,6 +106,13 @@ def get_subscription(stripe_id, raw=False):
     res = stripe.Subscription.retrieve(stripe_id)
     return serialize_subscription_data(res) if raw else res.id
 
+def get_customer_active_subscriptions(customer_stripe_id):
+    res = stripe.Subscription.list(
+        customer=customer_stripe_id,
+        status="active",
+    )
+    return res
+
 def cancel_subscription(
         stripe_id,
         cancel_at_period_end=False,
