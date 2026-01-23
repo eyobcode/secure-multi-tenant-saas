@@ -104,7 +104,7 @@ def get_checkout_session(session_id, raw=False):
 
 def get_subscription(stripe_id, raw=False):
     res = stripe.Subscription.retrieve(stripe_id)
-    return res if raw else res.id
+    return serialize_subscription_data(res) if raw else res.id
 
 def cancel_subscription(stripe_id,reason="", feedback="other",raw=False):
     res = stripe.Subscription.cancel(
