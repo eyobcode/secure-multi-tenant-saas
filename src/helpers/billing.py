@@ -106,14 +106,34 @@ def get_subscription(stripe_id, raw=False):
     res = stripe.Subscription.retrieve(stripe_id)
     return serialize_subscription_data(res) if raw else res.id
 
-def cancel_subscription(stripe_id,reason="", feedback="other",raw=False):
-    res = stripe.Subscription.cancel(
+def cancel_subscription(
         stripe_id,
-        cancellation_details = {
-            "comment":reason,
-            "feedback": feedback
-        } )
-    return res if raw else res.id
+        cancel_at_period_end=False,
+        reason="",
+        feedback="other",
+        raw=False
+):
+    if cancel_at_period_end:
+        # Cancel at period end
+        res = stripe.Subscription.modify(
+            stripe_id,
+            cancel_at_period_end=cancel_at_period_end,
+            cancellation_details={
+                "comment": reason,
+                "feedback": feedback
+            }
+        )
+    else:
+        # Cancel immediately
+        res = stripe.Subscription.cancel(
+            stripe_id,
+            cancellation_details={
+                "comment": reason,
+                "feedback": feedback
+            }
+        )
+    return serialize_subscription_data(res)
+
 
 def get_checkout_customer_plan(session_id):
     checkout_r = get_checkout_session(session_id, raw=True)
