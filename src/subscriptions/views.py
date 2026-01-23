@@ -1,6 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
-
+from django.contrib import messages
 import helpers.billing
 from subscriptions.models import SubscriptionsPrice,Subscriptions,UserSubscriptions
 from django.urls import reverse
@@ -15,6 +15,7 @@ def user_subscription_view(request):
             for k,v in sub_data.items():
                 setattr(user_sub_obj, k, v)
             user_sub_obj.save()
+        messages.success(request, "Your plan details have been refreshed.")
         return redirect(user_sub_obj.get_absolute_url())
     return render(
         request,
@@ -23,6 +24,24 @@ def user_subscription_view(request):
             "subscription": user_sub_obj
         }
     )
+@login_required
+def user_subscription_cancel_view(request,):
+    user_sub_obj, created = UserSubscriptions.objects.get_or_create(user=request.user)
+    if request.method == "POST":
+        if user_sub_obj.stripe_id and user_sub_obj.is_active_status:
+            sub_data = helpers.billing.cancel_subscription(
+                user_sub_obj.stripe_id,
+                reason="User wanted to end",
+                feedback="other",
+                cancel_at_period_end=False,
+                raw=True)
+            for k,v in sub_data.items():
+                setattr(user_sub_obj, k, v)
+                print(v)
+            user_sub_obj.save()
+            messages.success(request, "Your plan has been cancelled.")
+        return redirect(user_sub_obj.get_absolute_url())
+    return render(request, 'subscriptions/user_cancel_view.html', {"subscription": user_sub_obj})
 
 
 def subscription_price_view(request, interval="monthly"):
