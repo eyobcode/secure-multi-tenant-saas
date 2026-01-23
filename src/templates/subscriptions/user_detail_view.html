@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block head_title %}Your Subscription - {{ block.super }}{% endblock head_title %}
+
+{% block content %}
+    <div class="max-w-3xl mx-auto px-4 py-10">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">
+                    Your Subscription
+                </h1>
+                <p class="text-gray-500 mt-1">
+                    Billing & plan details synced with Stripe
+                </p>
+            </div>
+
+            <!-- REFRESH BUTTON -->
+            <form method="post">
+                {% csrf_token %}
+                <button
+                        type="submit"
+                        class="inline-flex items-center gap-2 px-4 py-2 rounded-xl
+                       bg-gray-900 text-white text-sm font-medium
+                       hover:bg-gray-800 transition"
+                >
+                    🔄 Refresh
+                </button>
+            </form>
+        </div>
+
+        <!-- Subscription Card -->
+        <div class="bg-white shadow-lg rounded-2xl p-6 border border-gray-100">
+
+            <!-- Plan + Status -->
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <p class="text-sm text-gray-500">Plan</p>
+                    <p class="text-xl font-semibold text-gray-900">
+                        {{ subscription.plan_name }}
+                    </p>
+                </div>
+
+                <span class="
+                px-4 py-1.5 rounded-full text-sm font-medium
+                {% if subscription.status == 'active' %}
+                    bg-green-100 text-green-700
+                {% else %}
+                    bg-yellow-100 text-yellow-700
+                {% endif %}
+            ">
+                {{ subscription.status|title }}
+            </span>
+            </div>
+
+            <hr class="my-6">
+
+            <!-- Info Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm">
+
+                <div>
+                    <p class="text-gray-500">Member since</p>
+                    <p class="font-medium text-gray-900">
+                        {{ subscription.original_period_start|timesince }} ago
+                    </p>
+                </div>
+
+                <div>
+                    <p class="text-gray-500">Billing started</p>
+                    <p class="font-medium text-gray-900">
+                        {{ subscription.current_period_start }}
+                    </p>
+                </div>
+
+                <div>
+                    <p class="text-gray-500">Billing ends</p>
+                    <p class="font-medium text-gray-900">
+                        {{ subscription.current_period_end|timeuntil }}
+                    </p>
+                </div>
+
+                <div>
+                    <p class="text-gray-500">Exact end date</p>
+                    <p class="font-medium text-gray-900">
+                        {{ subscription.current_period_end }}
+                    </p>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+{% endblock %}
