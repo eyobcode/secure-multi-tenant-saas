@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block head_title %}Cancel Subscription - {{ block.super }}{% endblock head_title %}
+
+{% block content %}
+    <div class="max-w-2xl mx-auto px-4 py-16">
+
+        <!-- Card -->
+        <div class="bg-white shadow-lg rounded-2xl p-8 border border-gray-100">
+
+            {% if subscription.is_active_status %}
+                <!-- Warning Icon -->
+                <div class="flex items-center gap-4 mb-6">
+                    <svg class="w-10 h-10 text-red-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <h1 class="text-2xl font-bold text-gray-900">
+                        Cancel "{{ subscription.plan_name }}"?
+                    </h1>
+                </div>
+
+                <p class="text-gray-600 mb-8">
+                    Are you sure you want to cancel your subscription? You will lose access to premium features at the end of your billing period.
+                </p>
+
+                <!-- Buttons -->
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <form action="" method="POST" class="flex-1">
+                        {% csrf_token %}
+                        <button type="submit"
+                                class="w-full px-6 py-3 rounded-xl bg-red-600 text-white font-semibold text-sm hover:bg-red-700 transition">
+                            Yes, cancel subscription
+                        </button>
+                    </form>
+
+                    <a href="{{ subscription.get_absolute_url }}"
+                       class="w-full text-center px-6 py-3 rounded-xl border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition flex-1">
+                        No, go back
+                    </a>
+                </div>
+
+            {% else %}
+                <div class="text-center">
+                    <svg class="mx-auto w-12 h-12 text-gray-400 mb-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-3-3v6m9-9a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <h1 class="text-xl font-bold text-gray-900 mb-2">Subscription inactive</h1>
+                    <p class="text-gray-500">You no longer have an active membership.</p>
+                    <a href="{{ subscription.get_absolute_url }}"
+                       class="mt-6 inline-block px-6 py-3 rounded-xl bg-gray-900 text-white font-medium hover:bg-gray-800 transition">
+                        Back to Subscription
+                    </a>
+                </div>
+            {% endif %}
+
+        </div>
+    </div>
+{% endblock %}
